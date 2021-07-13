@@ -38,3 +38,4 @@ For the best experience, compile this toolbox locally on your server;
 2. Be sure that the rust executables are on your `$PATH`
 3. `cargo install --locked --git https://github.com/shadowjonathan/conduit_toolbox`
 
+(updating only requires running that last line again)
