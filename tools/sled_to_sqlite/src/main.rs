@@ -1,12 +1,8 @@
-mod sled;
-mod sqlite;
 use std::path::Path;
 
 use clap::{App, Arg};
 
-use crate::{sled::SledDB, sqlite::SqliteDB};
-
-use itertools::Itertools;
+use conduit_iface::db::{copy_database, sled, sqlite};
 
 fn main() -> anyhow::Result<()> {
     let matches = App::new("Conduit Sled to Sqlite Migrator")
@@ -46,25 +42,11 @@ fn main() -> anyhow::Result<()> {
 
     dbg!(&source_dir, &dest_dir);
 
-    let sled = SledDB::new(crate::sled::new_db(source_dir)?);
+    let sled = sled::SledDB::new(sled::new_db(source_dir)?);
 
-    let mut sqlite = SqliteDB::new(sqlite::new_conn(dest_dir)?);
+    let mut sqlite = sqlite::SqliteDB::new(sqlite::new_conn(dest_dir)?);
 
-    for (tree, i) in sled.iter() {
-        let tree = String::from_utf8(tree)?;
-
-        dbg!(&tree);
-
-        let mut t = sqlite.table(tree)?;
-
-        let mut x: u32 = 0;
-
-        for chunk in &i.chunks(1000) {
-            dbg!(&x);
-            t.batch_insert(chunk)?;
-            x += 1000;
-        }
-    }
+    copy_database(&sled, &mut sqlite, 1000)?;
 
     Ok(())
 }
