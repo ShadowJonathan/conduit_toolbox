@@ -10,3 +10,5 @@ itertools = "0.10.1"
 sled = { version = "0.34.6", features = ["compression", "no_metrics"] }
 rusqlite = { version = "0.25.3", features = ["bundled"] }
 anyhow = "1.0.42"
+heed = { git = "https://github.com/timokoesters/heed.git", rev = "f6f825da7fb2c758867e05ad973ef800a6fe1d5d" }
+thiserror = "1.0.26"

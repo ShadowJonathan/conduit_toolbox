@@ -1,8 +1,7 @@
-use std::path::Path;
-
+use super::{Database, KVIter, Segment, SegmentIter};
+use itertools::Itertools;
 use sled::{Batch, Config, Db, Result, Tree};
-
-use super::{Database, KVIter, Segment, TreeKVIter};
+use std::path::Path;
 
 pub fn new_db<P: AsRef<Path>>(path: P) -> Result<Db> {
     Config::default().path(path).use_compression(true).open()
@@ -17,31 +16,12 @@ impl SledDB {
 }
 
 impl Database for SledDB {
-    fn iter<'a>(&'a self) -> TreeKVIter<'a> {
-        Box::new(
-            self.0
-                .tree_names()
-                .into_iter()
-                .map(|v| v.to_vec())
-                .filter_map(move |v| {
-                    if let Ok(t) = self.0.open_tree(&v) {
-                        Some((v, t))
-                    } else {
-                        None
-                    }
-                })
-                .map(|(v, t): (Vec<u8>, Tree)| -> (Vec<u8>, KVIter<'a>) {
-                    let i = t.into_iter().filter_map(|r| {
-                        if let Ok(t) = r {
-                            Some((t.0.to_vec(), t.1.to_vec()))
-                        } else {
-                            None
-                        }
-                    });
-
-                    (v, Box::new(i))
-                }),
-        )
+    fn names<'a>(&'a self) -> Vec<Vec<u8>> {
+        self.0
+            .tree_names()
+            .into_iter()
+            .map(|v| v.to_vec())
+            .collect_vec()
     }
 
     fn segment(&mut self, name: Vec<u8>) -> Option<Box<dyn Segment>> {
@@ -64,5 +44,23 @@ impl Segment for Tree {
         }
 
         self.apply_batch(sled_batch).map_err(Into::into)
+    }
+
+    fn get_iter<'a>(&'a mut self) -> Box<dyn super::SegmentIter + 'a> {
+        Box::new(SledTreeIter(self))
+    }
+}
+
+struct SledTreeIter<'a>(&'a mut Tree);
+
+impl SegmentIter for SledTreeIter<'_> {
+    fn iter<'a>(&'a mut self) -> KVIter<'a> {
+        Box::new(self.0.iter().filter_map(|r| {
+            if let Ok(t) = r {
+                Some((t.0.to_vec(), t.1.to_vec()))
+            } else {
+                None
+            }
+        }))
     }
 }

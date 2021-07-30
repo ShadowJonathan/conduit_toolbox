@@ -42,11 +42,11 @@ fn main() -> anyhow::Result<()> {
 
     dbg!(&source_dir, &dest_dir);
 
-    let sled = sled::SledDB::new(sled::new_db(source_dir)?);
+    let mut sled = sled::SledDB::new(sled::new_db(source_dir)?);
 
     let mut sqlite = sqlite::SqliteDB::new(sqlite::new_conn(dest_dir)?);
 
-    copy_database(&sled, &mut sqlite, 1000)?;
+    copy_database(&mut sled, &mut sqlite, 1000)?;
 
     Ok(())
 }
