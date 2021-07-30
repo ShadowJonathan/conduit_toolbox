@@ -16,7 +16,7 @@ impl From<heed::Error> for HeedError {
 
 pub fn new_db<P: AsRef<Path>>(path: P) -> Result<heed::Env, HeedError> {
     let mut env_builder = heed::EnvOpenOptions::new();
-    env_builder.map_size(1024 * 1024 * 1024); // 1 Terabyte
+    // env_builder.map_size(1024 * 1024 * 1024); // 1 Terabyte
     env_builder.max_readers(126);
     env_builder.max_dbs(128);
 
