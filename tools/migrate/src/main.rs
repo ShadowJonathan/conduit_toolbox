@@ -1,5 +1,7 @@
 use clap::{App, Arg};
-use conduit_iface::db::{self, copy_database, heed::HeedDB, sled::SledDB, sqlite::SqliteDB};
+use conduit_iface::db::{
+    self, copy_database, heed::HeedDB, rocksdb::RocksDB, sled::SledDB, sqlite::SqliteDB,
+};
 use std::{
     ops::{Deref, DerefMut},
     path::{Path, PathBuf},
@@ -9,6 +11,7 @@ enum Database {
     Sled(SledDB),
     Sqlite(SqliteDB),
     Heed(HeedDB),
+    Rocks(RocksDB),
 }
 
 impl Database {
@@ -17,6 +20,7 @@ impl Database {
             "sled" => Self::Sled(SledDB::new(db::sled::new_db(path)?)),
             "heed" => Self::Heed(HeedDB::new(db::heed::new_db(path)?)),
             "sqlite" => Self::Sqlite(SqliteDB::new(db::sqlite::new_conn(path)?)),
+            "rocks" => Self::Rocks(db::rocksdb::new_conn(path)?),
             _ => panic!("unknown database type: {}", name),
         })
     }
@@ -30,6 +34,7 @@ impl Deref for Database {
             Database::Sled(db) => db,
             Database::Sqlite(db) => db,
             Database::Heed(db) => db,
+            Database::Rocks(db) => db,
         }
     }
 }
@@ -40,11 +45,12 @@ impl DerefMut for Database {
             Database::Sled(db) => db,
             Database::Sqlite(db) => db,
             Database::Heed(db) => db,
+            Database::Rocks(db) => db,
         }
     }
 }
 
-const DATABASES: &[&str] = &["heed", "sqlite", "sled"];
+const DATABASES: &[&str] = &["heed", "sqlite", "sled", "rocks"];
 
 fn main() -> anyhow::Result<()> {
     let matches = App::new("Conduit Sled to Sqlite Migrator")

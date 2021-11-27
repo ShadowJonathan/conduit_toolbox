@@ -1,4 +1,5 @@
 pub mod heed;
+pub mod rocksdb;
 pub mod sled;
 pub mod sqlite;
 
