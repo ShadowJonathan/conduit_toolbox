@@ -15,11 +15,14 @@ impl SledDB {
     }
 }
 
+const SLED_DEFAULT: &[u8] = "__sled__default".as_bytes();
+
 impl Database for SledDB {
     fn names<'a>(&'a self) -> Vec<Vec<u8>> {
         self.0
             .tree_names()
             .into_iter()
+            .filter(|v| v != SLED_DEFAULT)
             .map(|v| v.to_vec())
             .collect_vec()
     }

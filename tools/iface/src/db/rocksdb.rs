@@ -62,7 +62,7 @@ impl Database for RocksDB {
     }
 
     fn names<'a>(&'a self) -> Vec<Vec<u8>> {
-        self.old_cfs.iter().map(|v| v.as_bytes().to_vec()).collect()
+        self.old_cfs.iter().filter(|&v| &*v != "default").map(|v| v.as_bytes().to_vec()).collect()
     }
 }
 
