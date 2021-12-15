@@ -38,6 +38,9 @@ For the best experience, compile this toolbox locally on your server;
 2. Be sure that the rust executables are on your `$PATH`
 3. You may want to have a compiler and build tools installed on your system, or else cargo will complain about not being able to "link" or "compile" with `cc`.
    - on debian/ubuntu-based systems you can install this with `sudo apt install build-essential`
-5. `cargo install --locked --git https://github.com/shadowjonathan/conduit_toolbox`\
+5. `cargo install --locked --git https://github.com/shadowjonathan/conduit_toolbox` (Plus an extra argument, see below)
+   - Depending on what you're trying to do, you'll have to add one more argument here
+      - Are you trying to install the Sled-to-Sqlite migrator? Add `conduit_sled_to_sqlite`
+      - Are you trying to install the generic migrator? Add `conduit_migrate`
 
 (updating only requires running that last line again)
