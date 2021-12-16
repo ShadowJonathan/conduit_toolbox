@@ -87,6 +87,8 @@ impl<'r> Segment for RocksDBCF<'r> {
             self.db.rocks.put_cf(cf, key, value)?;
         }
 
+        self.db.rocks.flush_cf(cf)?;
+
         Ok(())
     }
 
