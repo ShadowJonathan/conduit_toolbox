@@ -66,6 +66,13 @@ impl Database for RocksDB {
     }
 }
 
+impl Drop for RocksDB {
+    #[allow(unused_must_use)]
+    fn drop(&mut self) {
+        self.rocks.flush();
+    }
+}
+
 pub struct RocksDBCF<'a> {
     db: &'a mut RocksDB,
     name: String,
@@ -86,8 +93,6 @@ impl<'r> Segment for RocksDBCF<'r> {
         for (key, value) in batch {
             self.db.rocks.put_cf(cf, key, value)?;
         }
-
-        self.db.rocks.flush_cf(cf)?;
 
         Ok(())
     }
