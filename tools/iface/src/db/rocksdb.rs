@@ -5,15 +5,20 @@ use rocksdb::{DBWithThreadMode, MultiThreaded};
 
 pub fn new_conn<P: AsRef<Path>>(path: P) -> Result<RocksDB, rocksdb::Error> {
     let mut db_opts = rocksdb::Options::default();
+
     db_opts.create_if_missing(true);
-    db_opts.set_max_open_files(16);
+    db_opts.set_max_open_files(512);
+    db_opts.set_compression_type(rocksdb::DBCompressionType::Zstd);
     db_opts.set_compaction_style(rocksdb::DBCompactionStyle::Level);
-    db_opts.set_compression_type(rocksdb::DBCompressionType::Snappy);
-    db_opts.set_target_file_size_base(256 << 20);
+    db_opts.set_target_file_size_base(256 * 1024 * 1024);
     db_opts.set_write_buffer_size(256 << 20);
+    db_opts.set_optimize_filters_for_hits(true);
+    db_opts.set_skip_stats_update_on_db_open(true);
+    db_opts.set_level_compaction_dynamic_level_bytes(true);
 
     let mut block_based_options = rocksdb::BlockBasedOptions::default();
-    block_based_options.set_block_size(512 << 10);
+    block_based_options.set_block_size(4 * 1024);
+    block_based_options.set_cache_index_and_filter_blocks(true);
     db_opts.set_block_based_table_factory(&block_based_options);
 
     let cfs = DBWithThreadMode::<MultiThreaded>::list_cf(&db_opts, &path).unwrap_or_default();
