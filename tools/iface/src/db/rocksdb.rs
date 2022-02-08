@@ -33,7 +33,7 @@ pub fn new_conn<P: AsRef<Path>>(path: P) -> Result<RocksDB, rocksdb::Error> {
         &opts,
         &path,
         cfs.iter().map(|name| {
-            let mut options = rocksdb::Options::default();
+            let mut options = opts.clone();
             let prefix_extractor = rocksdb::SliceTransform::create_fixed_prefix(1);
             options.set_prefix_extractor(prefix_extractor);
 
