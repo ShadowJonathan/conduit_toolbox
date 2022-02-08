@@ -33,6 +33,10 @@ impl Database for SledDB {
             .ok()
             .map(|t| -> Box<dyn Segment> { Box::new(t) })
     }
+
+    fn flush(&mut self) {
+        self.0.flush().unwrap();
+    }
 }
 
 impl Segment for Tree {

@@ -13,6 +13,8 @@ pub trait Database {
     fn names<'a>(&'a self) -> Vec<Vec<u8>>;
 
     fn segment<'a>(&'a mut self, name: Vec<u8>) -> Option<Box<dyn Segment + 'a>>; // change return type to Result
+
+    fn flush(&mut self);
 }
 
 pub trait Segment {
@@ -54,8 +56,10 @@ pub fn copy_database(
         }
 
         drop(dst_seg);
-
         drop(src_seg_iter);
+        drop(src_seg);
+
+        dst.flush();
     }
 
     Ok(())

@@ -80,6 +80,10 @@ impl Database for RocksDB {
             .map(|v| v.as_bytes().to_vec())
             .collect()
     }
+
+    fn flush(&mut self) {
+        self.rocks.flush().unwrap()
+    }
 }
 
 impl Drop for RocksDB {

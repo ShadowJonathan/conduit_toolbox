@@ -64,6 +64,10 @@ impl Database for HeedDB {
             .map(|(k, _)| k)
             .collect_vec()
     }
+
+    fn flush(&mut self) {
+        // NOOP
+    }
 }
 pub struct HeedSegment {
     env: heed::Env,

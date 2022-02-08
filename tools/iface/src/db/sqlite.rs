@@ -64,6 +64,10 @@ impl Database for SqliteDB {
             name: string,
         }))
     }
+
+    fn flush(&mut self) {
+        // NOOP
+    }
 }
 
 pub struct SqliteSegment<'a> {
