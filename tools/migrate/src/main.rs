@@ -1,26 +1,36 @@
 use clap::{App, Arg};
-use conduit_iface::db::{
-    self, copy_database, heed::HeedDB, rocksdb::RocksDB, sled::SledDB, sqlite::SqliteDB,
-};
+use conduit_iface::db::{self, copy_database};
 use std::{
     ops::{Deref, DerefMut},
     path::{Path, PathBuf},
 };
 
 enum Database {
-    Sled(SledDB),
-    Sqlite(SqliteDB),
-    Heed(HeedDB),
-    Rocks(RocksDB),
+    #[cfg(feature = "sled")]
+    Sled(db::sled::SledDB),
+    #[cfg(feature = "heed")]
+    Heed(db::heed::HeedDB),
+    #[cfg(feature = "sqlite")]
+    Sqlite(db::sqlite::SqliteDB),
+    #[cfg(feature = "rocksdb")]
+    Rocks(db::rocksdb::RocksDB),
+    #[cfg(feature = "persy")]
+    Persy(db::persy::PersyDB),
 }
 
 impl Database {
     fn new(name: &str, path: PathBuf) -> anyhow::Result<Self> {
         Ok(match name {
-            "sled" => Self::Sled(SledDB::new(db::sled::new_db(path)?)),
-            "heed" => Self::Heed(HeedDB::new(db::heed::new_db(path)?)),
-            "sqlite" => Self::Sqlite(SqliteDB::new(db::sqlite::new_conn(path)?)),
+            #[cfg(feature = "sled")]
+            "sled" => Self::Sled(db::sled::SledDB::new(db::sled::new_db(path)?)),
+            #[cfg(feature = "heed")]
+            "heed" => Self::Heed(db::heed::HeedDB::new(db::heed::new_db(path)?)),
+            #[cfg(feature = "sqlite")]
+            "sqlite" => Self::Sqlite(db::sqlite::SqliteDB::new(db::sqlite::new_conn(path)?)),
+            #[cfg(feature = "rocksdb")]
             "rocks" => Self::Rocks(db::rocksdb::new_conn(path)?),
+            #[cfg(feature = "persy")]
+            "persy" => Self::Persy(db::persy::new_db(path)?),
             _ => panic!("unknown database type: {}", name),
         })
     }
@@ -31,10 +41,16 @@ impl Deref for Database {
 
     fn deref(&self) -> &Self::Target {
         match self {
+            #[cfg(feature = "sled")]
             Database::Sled(db) => db,
-            Database::Sqlite(db) => db,
+            #[cfg(feature = "heed")]
             Database::Heed(db) => db,
+            #[cfg(feature = "sqlite")]
+            Database::Sqlite(db) => db,
+            #[cfg(feature = "rocksdb")]
             Database::Rocks(db) => db,
+            #[cfg(feature = "persy")]
+            Database::Persy(db) => db,
         }
     }
 }
@@ -42,15 +58,32 @@ impl Deref for Database {
 impl DerefMut for Database {
     fn deref_mut(&mut self) -> &mut Self::Target {
         match self {
+            #[cfg(feature = "sled")]
             Database::Sled(db) => db,
-            Database::Sqlite(db) => db,
+            #[cfg(feature = "heed")]
             Database::Heed(db) => db,
+            #[cfg(feature = "sqlite")]
+            Database::Sqlite(db) => db,
+            #[cfg(feature = "rocksdb")]
             Database::Rocks(db) => db,
+            #[cfg(feature = "persy")]
+            Database::Persy(db) => db,
         }
     }
 }
 
-const DATABASES: &[&str] = &["heed", "sqlite", "sled", "rocks"];
+const DATABASES: &[&str] = &[
+    #[cfg(feature = "sled")]
+    "sled",
+    #[cfg(feature = "heed")]
+    "heed",
+    #[cfg(feature = "sqlite")]
+    "sqlite",
+    #[cfg(feature = "rocksdb")]
+    "rocks",
+    #[cfg(feature = "persy")]
+    "persy",
+];
 
 fn main() -> anyhow::Result<()> {
     let matches = App::new("Conduit Sled to Sqlite Migrator")

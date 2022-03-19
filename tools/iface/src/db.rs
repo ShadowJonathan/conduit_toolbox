@@ -1,6 +1,12 @@
+#[cfg(feature = "heed")]
 pub mod heed;
+#[cfg(feature = "persy")]
+pub mod persy;
+#[cfg(feature = "rocksdb")]
 pub mod rocksdb;
+#[cfg(feature = "sled")]
 pub mod sled;
+#[cfg(feature = "sqlite")]
 pub mod sqlite;
 
 use itertools::Itertools;
