@@ -106,9 +106,22 @@ impl SegmentIter for SqliteSegmentIter<'_> {
     fn iter<'f>(&'f mut self) -> KVIter<'f> {
         Box::new(
             self.0
-                .query_map([], |row| Ok((row.get_unwrap(0), row.get_unwrap(1))))
+                .query_map([], |row| Ok((row.get(0), row.get(1))))
                 .unwrap()
-                .map(|r| r.unwrap()),
+                .map(|x| x.unwrap())
+                .filter_map(|(k, v)| {
+                    let Ok(k) = k else {
+                        println!("ignored a row because its key is malformed");
+                        return None;
+                    };
+
+                    let Ok(v) = v else {
+                        println!("ignored a row because its value is malformed");
+                        return None;
+                    };
+
+                    Some((k, v))
+                }),
         )
     }
 }
