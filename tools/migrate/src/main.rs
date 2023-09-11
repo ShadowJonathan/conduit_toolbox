@@ -1,5 +1,5 @@
 use clap::{App, Arg};
-use conduit_iface::db::{self, copy_database};
+use conduit_iface::db::{self, copy_database, Config};
 use std::{
     ops::{Deref, DerefMut},
     path::{Path, PathBuf},
@@ -19,14 +19,17 @@ enum Database {
 }
 
 impl Database {
-    fn new(name: &str, path: PathBuf) -> anyhow::Result<Self> {
+    fn new(name: &str, path: PathBuf, config: Config) -> anyhow::Result<Self> {
         Ok(match name {
             #[cfg(feature = "sled")]
             "sled" => Self::Sled(db::sled::SledDB::new(db::sled::new_db(path)?)),
             #[cfg(feature = "heed")]
             "heed" => Self::Heed(db::heed::HeedDB::new(db::heed::new_db(path)?)),
             #[cfg(feature = "sqlite")]
-            "sqlite" => Self::Sqlite(db::sqlite::SqliteDB::new(db::sqlite::new_conn(path)?)),
+            "sqlite" => Self::Sqlite(db::sqlite::SqliteDB::new(
+                db::sqlite::new_conn(path)?,
+                config,
+            )),
             #[cfg(feature = "rocksdb")]
             "rocks" => Self::Rocks(db::rocksdb::new_conn(path)?),
             #[cfg(feature = "persy")]
@@ -129,6 +132,11 @@ fn main() -> anyhow::Result<()> {
                 .takes_value(true)
                 .required(true),
         )
+        .arg(
+            Arg::with_name("ignore_broken_rows")
+                .long("ignore-broken-rows")
+                .long_help("Lossy migration methodology if parts of the database are malformed due to e.g. improper manual database surgery. Currently only applies to SQLite.")
+        )
         .get_matches();
 
     let src_dir = matches.value_of("from_dir").unwrap_or(".");
@@ -154,6 +162,8 @@ fn main() -> anyhow::Result<()> {
     }?;
 
     dbg!(&src_dir, &dst_dir);
+
+    let ignore_broken_rows = matches.is_present("ignore_broken_rows");
 
     let mut src_db = Database::new(matches.value_of("from").unwrap(), src_dir)?;
 

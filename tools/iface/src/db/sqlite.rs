@@ -2,7 +2,7 @@ use itertools::Itertools;
 use rusqlite::{self, Connection, DatabaseName::Main, Statement};
 use std::{collections::HashSet, iter::FromIterator, path::Path};
 
-use super::{Database, KVIter, Segment, SegmentIter};
+use super::{Config, Database, KVIter, Segment, SegmentIter};
 
 pub fn new_conn<P: AsRef<Path>>(path: P) -> rusqlite::Result<Connection> {
     let path = path.as_ref().join("conduit.db");
@@ -15,13 +15,14 @@ pub fn new_conn<P: AsRef<Path>>(path: P) -> rusqlite::Result<Connection> {
 
 pub struct SqliteDB {
     conn: Connection,
+    config: Config,
 }
 
 const CORRECT_TABLE_SET: &[&str] = &["key", "value"];
 
 impl<'a> SqliteDB {
-    pub fn new(conn: Connection) -> Self {
-        Self { conn }
+    pub fn new(conn: Connection, config: Config) -> Self {
+        Self { conn, config }
     }
 
     fn valid_tables(&self) -> Vec<String> {
@@ -62,6 +63,7 @@ impl Database for SqliteDB {
         Some(Box::new(SqliteSegment {
             conn: &mut self.conn,
             name: string,
+            config: self.config,
         }))
     }
 
@@ -73,6 +75,7 @@ impl Database for SqliteDB {
 pub struct SqliteSegment<'a> {
     conn: &'a mut Connection,
     name: String,
+    config: Config,
 }
 
 impl Segment for SqliteSegment<'_> {
@@ -92,23 +95,52 @@ impl Segment for SqliteSegment<'_> {
     }
 
     fn get_iter(&mut self) -> Box<dyn super::SegmentIter + '_> {
-        Box::new(SqliteSegmentIter(
-            self.conn
+        Box::new(SqliteSegmentIter {
+            statement: self
+                .conn
                 .prepare(format!("SELECT key, value FROM {}", self.name).as_str())
                 .unwrap(),
-        ))
+            config: self.config,
+        })
     }
 }
 
-struct SqliteSegmentIter<'a>(Statement<'a>);
+struct SqliteSegmentIter<'a> {
+    statement: Statement<'a>,
+    config: Config,
+}
 
 impl SegmentIter for SqliteSegmentIter<'_> {
     fn iter<'f>(&'f mut self) -> KVIter<'f> {
+        let config = self.config;
+
         Box::new(
-            self.0
-                .query_map([], |row| Ok((row.get_unwrap(0), row.get_unwrap(1))))
+            self.statement
+                .query_map([], |row| Ok((row.get(0), row.get(1))))
                 .unwrap()
-                .map(|r| r.unwrap()),
+                .map(|x| x.unwrap())
+                .filter_map(move |(k, v)| {
+                    let advice = "You could try using `--ignore-broken-rows` to complete the migration, but take note of its caveats.";
+                    let Ok(k) = k else {
+                        if config.ignore_broken_rows {
+                            println!("ignored a row because its key is malformed");
+                        } else {
+                            panic!("This row has a malformed key. {}", advice);
+                        }
+                        return None;
+                    };
+
+                    let Ok(v) = v else {
+                        if config.ignore_broken_rows {
+                            println!("ignored a row because its value is malformed");
+                        } else {
+                            panic!("This row has a malformed value. {}", advice);
+                        }
+                        return None;
+                    };
+
+                    Some((k, v))
+                }),
         )
     }
 }
