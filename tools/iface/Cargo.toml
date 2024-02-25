@@ -17,6 +17,6 @@ rocksdb = { version = "0.17.0", features = ["multi-threaded-cf", "zstd"], option
 persy = { version = "1.2", optional = true }
 
 [features]
-default = ["sled", "persy", "heed", "sqlite", "rocksdb"]
+default = []
 
 sqlite = ["rusqlite"]

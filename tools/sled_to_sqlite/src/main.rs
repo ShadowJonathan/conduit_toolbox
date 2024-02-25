@@ -2,7 +2,7 @@ use std::path::Path;
 
 use clap::{App, Arg};
 
-use conduit_iface::db::{copy_database, sled, sqlite};
+use conduit_iface::db::{copy_database, sled, sqlite, Config};
 
 fn main() -> anyhow::Result<()> {
     let matches = App::new("Conduit Sled to Sqlite Migrator")
@@ -44,7 +44,12 @@ fn main() -> anyhow::Result<()> {
 
     let mut sled = sled::SledDB::new(sled::new_db(source_dir)?);
 
-    let mut sqlite = sqlite::SqliteDB::new(sqlite::new_conn(dest_dir)?);
+    let mut sqlite = sqlite::SqliteDB::new(
+        sqlite::new_conn(dest_dir)?,
+        Config {
+            ignore_broken_rows: false,
+        },
+    );
 
     copy_database(&mut sled, &mut sqlite, 1000)?;
 

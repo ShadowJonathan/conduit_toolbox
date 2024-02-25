@@ -17,7 +17,7 @@ pub type TreeKVIter<'a> = Box<dyn Iterator<Item = (Vec<u8>, KVIter<'a>)> + 'a>;
 
 #[derive(Clone, Copy)]
 pub struct Config {
-    ignore_broken_rows: bool,
+    pub ignore_broken_rows: bool,
 }
 
 pub trait Database {

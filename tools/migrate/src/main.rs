@@ -165,9 +165,11 @@ fn main() -> anyhow::Result<()> {
 
     let ignore_broken_rows = matches.is_present("ignore_broken_rows");
 
-    let mut src_db = Database::new(matches.value_of("from").unwrap(), src_dir)?;
+    let config = Config { ignore_broken_rows };
 
-    let mut dst_db = Database::new(matches.value_of("to").unwrap(), dst_dir)?;
+    let mut src_db = Database::new(matches.value_of("from").unwrap(), src_dir, config)?;
+
+    let mut dst_db = Database::new(matches.value_of("to").unwrap(), dst_dir, config)?;
 
     copy_database(&mut *src_db, &mut *dst_db, 1000)?;
 

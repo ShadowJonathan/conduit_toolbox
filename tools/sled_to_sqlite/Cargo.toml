@@ -8,4 +8,4 @@ edition = "2018"
 [dependencies]
 clap = "2.33.3"
 anyhow = "1.0.41"
-conduit_iface = { path = "../iface/" }
+conduit_iface = { path = "../iface/", features=["sled", "sqlite"] }
