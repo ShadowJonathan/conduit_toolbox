@@ -12,9 +12,8 @@ conduit_iface = { path = "../iface/", default-features = false }
 thiserror = "1.0.26"
 
 [features]
-default = ["sled", "sqlite", "rocksdb"]
+default = ["sqlite", "rocksdb"]
 
-sled = ["conduit_iface/sled"]
 persy = ["conduit_iface/persy"]
 heed = ["conduit_iface/heed"]
 sqlite = ["conduit_iface/sqlite"]

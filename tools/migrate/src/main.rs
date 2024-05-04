@@ -6,8 +6,6 @@ use std::{
 };
 
 enum Database {
-    #[cfg(feature = "sled")]
-    Sled(db::sled::SledDB),
     #[cfg(feature = "heed")]
     Heed(db::heed::HeedDB),
     #[cfg(feature = "sqlite")]
@@ -21,8 +19,6 @@ enum Database {
 impl Database {
     fn new(name: &str, path: PathBuf, config: Config) -> anyhow::Result<Self> {
         Ok(match name {
-            #[cfg(feature = "sled")]
-            "sled" => Self::Sled(db::sled::SledDB::new(db::sled::new_db(path)?)),
             #[cfg(feature = "heed")]
             "heed" => Self::Heed(db::heed::HeedDB::new(db::heed::new_db(path)?)),
             #[cfg(feature = "sqlite")]
@@ -44,8 +40,6 @@ impl Deref for Database {
 
     fn deref(&self) -> &Self::Target {
         match self {
-            #[cfg(feature = "sled")]
-            Database::Sled(db) => db,
             #[cfg(feature = "heed")]
             Database::Heed(db) => db,
             #[cfg(feature = "sqlite")]
@@ -61,8 +55,6 @@ impl Deref for Database {
 impl DerefMut for Database {
     fn deref_mut(&mut self) -> &mut Self::Target {
         match self {
-            #[cfg(feature = "sled")]
-            Database::Sled(db) => db,
             #[cfg(feature = "heed")]
             Database::Heed(db) => db,
             #[cfg(feature = "sqlite")]
@@ -76,8 +68,6 @@ impl DerefMut for Database {
 }
 
 const DATABASES: &[&str] = &[
-    #[cfg(feature = "sled")]
-    "sled",
     #[cfg(feature = "heed")]
     "heed",
     #[cfg(feature = "sqlite")]
@@ -89,7 +79,7 @@ const DATABASES: &[&str] = &[
 ];
 
 fn main() -> anyhow::Result<()> {
-    let matches = App::new("Conduit Sled to Sqlite Migrator")
+    let matches = App::new("Conduit Generic Migrator")
         .arg(
             Arg::with_name("from_dir")
                 .short("s")

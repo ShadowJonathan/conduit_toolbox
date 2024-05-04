@@ -4,8 +4,6 @@ pub mod heed;
 pub mod persy;
 #[cfg(feature = "rocksdb")]
 pub mod rocksdb;
-#[cfg(feature = "sled")]
-pub mod sled;
 #[cfg(feature = "sqlite")]
 pub mod sqlite;
 

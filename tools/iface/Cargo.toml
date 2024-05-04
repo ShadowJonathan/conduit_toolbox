@@ -10,11 +10,19 @@ itertools = "0.10.1"
 thiserror = "1.0.26"
 anyhow = "1.0.42"
 
-sled = { version = "0.34.6", features = ["compression", "no_metrics"], optional = true }
-rusqlite = { version = "0.25.3", features = ["bundled"], optional = true }
+rusqlite = { version = "0.31", features = ["bundled"], optional = true }
 heed = { git = "https://github.com/timokoesters/heed.git", rev = "f6f825da7fb2c758867e05ad973ef800a6fe1d5d", optional = true }
-rocksdb = { version = "0.17.0", features = ["multi-threaded-cf", "zstd"], optional = true }
 persy = { version = "1.2", optional = true }
+
+[dependencies.rocksdb]
+package = "rust-rocksdb"
+version = "0.25"
+optional = true
+features = [
+    "multi-threaded-cf",
+    "zstd",
+    "lz4",
+]
 
 [features]
 default = []
