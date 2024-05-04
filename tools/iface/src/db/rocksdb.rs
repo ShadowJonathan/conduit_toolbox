@@ -8,17 +8,21 @@ pub fn options() -> rocksdb::Options {
 
     db_opts.create_if_missing(true);
     db_opts.set_max_open_files(512);
-    db_opts.set_compression_type(rocksdb::DBCompressionType::Zstd);
+    db_opts.set_compression_type(rocksdb::DBCompressionType::Lz4);
+    db_opts.set_bottommost_compression_type(rocksdb::DBCompressionType::Zstd);
     db_opts.set_compaction_style(rocksdb::DBCompactionStyle::Level);
-    db_opts.set_target_file_size_base(256 * 1024 * 1024);
-    db_opts.set_write_buffer_size(256 << 20);
-    db_opts.set_optimize_filters_for_hits(true);
-    db_opts.set_skip_stats_update_on_db_open(true);
     db_opts.set_level_compaction_dynamic_level_bytes(true);
+    db_opts.set_bytes_per_sync(1048576);
+    db_opts.set_keep_log_file_num(100);
+    db_opts.set_wal_recovery_mode(rocksdb::DBRecoveryMode::TolerateCorruptedTailRecords);
 
     let mut block_based_options = rocksdb::BlockBasedOptions::default();
+    block_based_options.set_bloom_filter(10.0, false);
     block_based_options.set_block_size(4 * 1024);
     block_based_options.set_cache_index_and_filter_blocks(true);
+    block_based_options.set_pin_l0_filter_and_index_blocks_in_cache(true);
+    block_based_options.set_optimize_filters_for_memory(true);
+
     db_opts.set_block_based_table_factory(&block_based_options);
 
     db_opts
